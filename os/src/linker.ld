@@ -42,6 +42,13 @@ SECTIONS
     ebss = .;
     ekernel = .;
 
+    shaha = .;
+    .haha : {
+        KEEP(*(.haha .haha.*))
+    }
+    . = ALIGN(4K);
+    ehaha = .;
+
     /DISCARD/ : {
         *(.eh_frame)
     }
