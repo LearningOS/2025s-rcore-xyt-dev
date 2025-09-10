@@ -15,12 +15,13 @@
 //! userspace.
 
 #![deny(missing_docs)]
-#![deny(warnings)]
+// #![deny(warnings)]
 #![no_std]
 #![no_main]
 #![feature(panic_info_message)]
 #[macro_use]
 extern crate log;
+// use core::arch::asm;
 
 use core::arch::global_asm;
 #[path = "boards/qemu.rs"]
@@ -74,6 +75,10 @@ pub fn rust_main() -> ! {
         stext as usize,
         etext as usize
     );
+    // unsafe{asm!( // shutdown qemu
+    //     "sw {0}, 0({1})",
+    //     in(reg) 0x5555, in(reg) 0x100000
+    // );}
     debug!(
         "[kernel] .rodata [{:#x}, {:#x})",
         srodata as usize, erodata as usize

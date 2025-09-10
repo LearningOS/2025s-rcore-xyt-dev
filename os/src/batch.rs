@@ -16,7 +16,7 @@ struct KernelStack {
     data: [u8; KERNEL_STACK_SIZE],
 }
 
-#[repr(align(4096))]
+#[repr(align(4096))] // 整个 struct 的起始地址对齐方式 (按 4KB 对齐), 也可以用于具体字段
 struct UserStack {
     data: [u8; USER_STACK_SIZE],
 }
@@ -55,6 +55,7 @@ struct AppManager {
 
 impl AppManager {
     pub fn print_app_info(&self) {
+        // 拷贝内存数据之前，各 app 存放的起止地址
         println!("[kernel] num_app = {}", self.num_app);
         for i in 0..self.num_app {
             println!(
@@ -81,7 +82,7 @@ impl AppManager {
         );
         let app_dst = core::slice::from_raw_parts_mut(APP_BASE_ADDRESS as *mut u8, app_src.len());
         app_dst.copy_from_slice(app_src);
-        // Memory fence about fetching the instruction memory
+        // Memory fence is about fetching the instruction memory
         // It is guaranteed that a subsequent instruction fetch must
         // observes all previous writes to the instruction memory.
         // Therefore, fence.i must be executed after we have loaded
@@ -110,7 +111,7 @@ lazy_static! {
             let mut app_start: [usize; MAX_APP_NUM + 1] = [0; MAX_APP_NUM + 1];
             let app_start_raw: &[usize] =
                 core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1);
-            app_start[..=num_app].copy_from_slice(app_start_raw);
+            app_start[..=num_app].copy_from_slice(app_start_raw); // eg: 存放 7 个 app 则 8 个地址 (+1 最后一个 app 的 end addr)
             AppManager {
                 num_app,
                 current_app: 0,
@@ -130,14 +131,14 @@ pub fn print_app_info() {
     APP_MANAGER.exclusive_access().print_app_info();
 }
 
-/// run next app
+/// 运行下一个应用程序
 pub fn run_next_app() -> ! {
     let mut app_manager = APP_MANAGER.exclusive_access();
-    let current_app = app_manager.get_current_app();
+    let current_app = app_manager.get_current_app(); // 获取 APP_MANAGER.current_app (初始时为 0)
     unsafe {
-        app_manager.load_app(current_app);
+        app_manager.load_app(current_app); // load to APP_BASE_ADDRESS
     }
-    app_manager.move_to_next_app();
+    app_manager.move_to_next_app(); // APP_MANAGER.current_app += 1
     drop(app_manager);
     // before this we have to drop local variables related to resources manually
     // and release the resources
@@ -145,7 +146,7 @@ pub fn run_next_app() -> ! {
         fn __restore(cx_addr: usize);
     }
     unsafe {
-        __restore(KERNEL_STACK.push_context(TrapContext::app_init_context(
+        __restore(KERNEL_STACK.push_context(TrapContext::app_init_context( // to read
             APP_BASE_ADDRESS,
             USER_STACK.get_sp(),
         )) as *const _ as usize);

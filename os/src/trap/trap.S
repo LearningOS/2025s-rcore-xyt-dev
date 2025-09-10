@@ -2,13 +2,14 @@
 .macro SAVE_GP n
     sd x\n, \n*8(sp)
 .endm
-.macro LOAD_GP n
+.macro LOAD_GP n # load general purpose register
     ld x\n, \n*8(sp)
 .endm
     .section .text
     .globl __alltraps
     .globl __restore
-    .align 2
+    .align 2 # 对齐 stvec 的 BASE[63:2] 字段
+
 __alltraps:
     csrrw sp, sscratch, sp
     # now sp->kernel stack, sscratch->user stack
@@ -43,9 +44,9 @@ __restore:
     mv sp, a0
     # now sp->kernel stack(after allocated), sscratch->user stack
     # restore sstatus/sepc
-    ld t0, 32*8(sp)
-    ld t1, 33*8(sp)
-    ld t2, 2*8(sp)
+    ld t0, 32*8(sp) # TrapContext.sstatus -> t0
+    ld t1, 33*8(sp) # TrapContext.sepc -> t1
+    ld t2, 2*8(sp) # TrapContext.user_stack_top -> t2
     csrw sstatus, t0
     csrw sepc, t1
     csrw sscratch, t2
@@ -61,4 +62,4 @@ __restore:
     addi sp, sp, 34*8
     # now sp->kernel stack, sscratch->user stack
     csrrw sp, sscratch, sp
-    sret
+    sret # jump to sepc
