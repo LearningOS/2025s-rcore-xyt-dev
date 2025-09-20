@@ -3,6 +3,13 @@
 use crate::sbi::shutdown;
 use core::panic::PanicInfo;
 
+use core::arch::global_asm;
+
+global_asm!(include_str!("stackup.S"));
+extern "C" {
+    fn __stackup();
+}
+
 #[panic_handler]
 /// panic handler
 fn panic(info: &PanicInfo) -> ! {
@@ -16,5 +23,6 @@ fn panic(info: &PanicInfo) -> ! {
     } else {
         println!("[kernel] Panicked: {}", info.message().unwrap());
     }
+    // unsafe {__stackup();}
     shutdown()
 }
