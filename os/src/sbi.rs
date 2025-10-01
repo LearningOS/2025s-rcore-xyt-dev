@@ -35,6 +35,20 @@ pub fn console_putchar(c: usize) {
 
 /// use sbi call to shutdown the kernel
 pub fn shutdown() -> ! {
-    sbi_call(SBI_SHUTDOWN, 0, 0, 0);
+        unsafe {
+            // asm!(
+                // "sw {0}, 0({1})",
+                // in(reg)0x5555, in(reg)(0x100000)
+            // );
+
+            // For the case that the QEMU exit attempt did not work, transition into an infinite
+            // loop. Calling `panic!()` here is unfeasible, since there is a good chance
+            // this function here is the last expression in the `panic!()` handler
+            // itself. This prevents a possible infinite loop.
+            // loop {
+            //     asm!("wfi", options(nomem, nostack));
+            // }
+        }
+    // sbi_call(SBI_SHUTDOWN, 0, 0, 0);
     panic!("It should shutdown!");
 }

@@ -52,6 +52,7 @@ impl PageTableEntry {
     }
     /// Get the flags from the page table entry
     pub fn flags(&self) -> PTEFlags {
+        // self.bits as u8 截断为低8位, PTEFlags::from_bits() 将u8转换为PTEFlags
         PTEFlags::from_bits(self.bits as u8).unwrap()
     }
     /// The page pointered by page table entry is valid?

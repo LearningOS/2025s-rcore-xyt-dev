@@ -80,8 +80,8 @@ impl From<PhysPageNum> for usize {
 }
 impl From<VirtAddr> for usize {
     fn from(v: VirtAddr) -> Self {
-        if v.0 >= (1 << (VA_WIDTH_SV39 - 1)) {
-            v.0 | (!((1 << VA_WIDTH_SV39) - 1))
+        if v.0 >= (1 << (VA_WIDTH_SV39 - 1)) { // 注意这里是判断第38位是否为1
+            v.0 | (!((1 << VA_WIDTH_SV39) - 1)) // 63~39位全部置1
         } else {
             v.0
         }
